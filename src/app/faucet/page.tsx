@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Droplets, Twitter, Github, Clock, AlertCircle, CheckCircle, Sparkles, Zap, Trophy } from 'lucide-react';
+import { ArrowLeft, Droplets, Twitter, Github, Clock, AlertCircle, CheckCircle, Zap, Trophy } from 'lucide-react';
+import { GlinCoinIcon } from '@/components/icons/glin-coin-icon';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -155,7 +156,7 @@ export default function FaucetPage() {
             </Button>
 
             <div className="flex items-center space-x-2">
-              <Sparkles className="h-6 w-6 text-purple-400" />
+              <GlinCoinIcon size={24} />
               <span className="text-xl font-bold text-white">GLIN</span>
             </div>
           </div>

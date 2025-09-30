@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Zap, Trophy, ArrowRight, Sparkles } from 'lucide-react';
+import { Shield, Zap, Trophy, ArrowRight } from 'lucide-react';
+import { GlinCoinIcon } from '@/components/icons/glin-coin-icon';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useWallet } from '@/hooks/use-wallet';
@@ -43,8 +44,8 @@ export default function Home() {
           <div className="flex items-center justify-center mb-6">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur-lg opacity-75 animate-pulse"></div>
-              <div className="relative bg-black rounded-full p-4">
-                <Sparkles className="h-12 w-12 text-white" />
+              <div className="relative rounded-full">
+                <GlinCoinIcon size={80} />
               </div>
             </div>
           </div>

@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Send, Download, Trophy, Activity, Settings, LogOut,
-  Copy, Check, TrendingUp, Sparkles, Zap
+  Copy, Check, TrendingUp, Zap
 } from 'lucide-react';
+import { GlinCoinIcon } from '@/components/icons/glin-coin-icon';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -71,7 +72,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <Sparkles className="h-8 w-8 text-purple-400" />
+                <GlinCoinIcon size={32} />
                 <span className="text-2xl font-bold text-white">GLIN</span>
               </div>
               <Badge variant="outline" className="text-green-400 border-green-400">

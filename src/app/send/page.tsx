@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Send, AlertCircle, Loader2, Sparkles, User, Zap, Lock, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Send, AlertCircle, Loader2, User, Zap, Lock, Eye, EyeOff } from 'lucide-react';
+import { GlinCoinIcon } from '@/components/icons/glin-coin-icon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -131,7 +132,7 @@ export default function SendPage() {
             </Button>
 
             <div className="flex items-center space-x-2">
-              <Sparkles className="h-6 w-6 text-purple-400" />
+              <GlinCoinIcon size={24} />
               <span className="text-xl font-bold text-white">GLIN</span>
             </div>
           </div>

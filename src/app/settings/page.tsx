@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Settings, Key, Shield, Download, Trash2, AlertCircle,
-  Eye, EyeOff, Copy, Check, Lock, Sparkles, User, Globe, Moon, Sun
+  Eye, EyeOff, Copy, Check, Lock, User, Globe, Moon, Sun
 } from 'lucide-react';
+import { GlinCoinIcon } from '@/components/icons/glin-coin-icon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -160,7 +161,7 @@ export default function SettingsPage() {
             </Button>
 
             <div className="flex items-center space-x-2">
-              <Sparkles className="h-6 w-6 text-purple-400" />
+              <GlinCoinIcon size={24} />
               <span className="text-xl font-bold text-white">GLIN</span>
             </div>
           </div>
