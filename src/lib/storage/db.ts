@@ -73,6 +73,24 @@ class GlinWalletDB extends Dexie {
   constructor() {
     super('GlinWalletDB');
 
+    // Version 2: Changed index strategy for isActive
+    this.version(2).stores({
+      wallets: '++id, address',
+      accounts: '++id, walletId, address',
+      transactions: '++id, hash, from, to, timestamp',
+      contacts: '++id, address',
+      activities: '++id, type, timestamp',
+      settings: '++id, key'
+    }).upgrade(trans => {
+      // Migration: ensure isActive is properly set
+      return trans.wallets.toCollection().modify(wallet => {
+        if (wallet.isActive === undefined) {
+          wallet.isActive = false;
+        }
+      });
+    });
+
+    // Keep version 1 for backward compatibility
     this.version(1).stores({
       wallets: '++id, address, isActive',
       accounts: '++id, walletId, address',
@@ -99,7 +117,9 @@ class GlinWalletDB extends Dexie {
    * Get active wallet
    */
   async getActiveWallet(): Promise<Wallet | undefined> {
-    return await this.wallets.where('isActive').equals(1).first();
+    // Use filter instead of where clause to avoid IndexedDB boolean issues
+    const wallets = await this.wallets.toArray();
+    return wallets.find(w => w.isActive === true);
   }
 
   /**
@@ -108,7 +128,12 @@ class GlinWalletDB extends Dexie {
   async setActiveWallet(walletId: number): Promise<void> {
     await this.transaction('rw', this.wallets, async () => {
       // Deactivate all wallets
-      await this.wallets.where('isActive').equals(1).modify({ isActive: false });
+      const allWallets = await this.wallets.toArray();
+      for (const wallet of allWallets) {
+        if (wallet.isActive && wallet.id) {
+          await this.wallets.update(wallet.id, { isActive: false });
+        }
+      }
       // Activate selected wallet
       await this.wallets.update(walletId, { isActive: true, lastUsed: new Date() });
     });

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Wallet Database</title>
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #1e293b, #6b21a8, #1e293b);
+            color: white;
+            font-family: system-ui;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 400px;
+            text-align: center;
+        }
+        button {
+            background: linear-gradient(to right, #9333ea, #ec4899);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .success {
+            color: #4ade80;
+            margin-top: 1rem;
+        }
+        .error {
+            color: #f87171;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Clear Wallet Database</h1>
+        <p>This will clear all wallet data from IndexedDB.</p>
+        <p>Use this if you're experiencing database errors.</p>
+        <button onclick="clearDatabase()">Clear Database</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        async function clearDatabase() {
+            const statusDiv = document.getElementById('status');
+            try {
+                // Delete the database
+                await indexedDB.deleteDatabase('GlinWalletDB');
+
+                // Also clear localStorage just in case
+                localStorage.clear();
+                sessionStorage.clear();
+
+                statusDiv.className = 'success';
+                statusDiv.innerHTML = '✅ Database cleared successfully!<br>You can now close this tab and reload the wallet.';
+            } catch (error) {
+                statusDiv.className = 'error';
+                statusDiv.innerHTML = '❌ Error clearing database: ' + error.message;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

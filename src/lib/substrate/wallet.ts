@@ -70,7 +70,12 @@ export class WalletManager {
     };
 
     // Deactivate other wallets
-    await db.wallets.where('isActive').equals(true).modify({ isActive: false });
+    const allWallets = await db.wallets.toArray();
+    for (const wallet of allWallets) {
+      if (wallet.isActive && wallet.id) {
+        await db.wallets.update(wallet.id, { isActive: false });
+      }
+    }
 
     // Save new wallet
     const id = await db.wallets.add(wallet);
@@ -195,11 +200,11 @@ export class WalletManager {
     amount: string,
     password: string
   ): Promise<string> {
-    if (!this.currentWallet || !this.currentPair) {
-      throw new Error('No wallet unlocked');
+    if (!this.currentWallet) {
+      throw new Error('No wallet selected');
     }
 
-    // Verify password
+    // Decrypt seed and verify password
     const decryptedSeed = EncryptionService.decrypt(
       this.currentWallet.encryptedSeed,
       this.currentWallet.nonce,
@@ -211,19 +216,14 @@ export class WalletManager {
       throw new Error('Invalid password');
     }
 
-    // Send transaction
-    const hash = await this.client.transfer(
-      this.currentPair,
-      to,
-      amount,
-      (status) => {
-        console.log('Transaction status:', status.status.toString());
-      }
-    );
+    // Create keypair from seed if not already loaded
+    if (!this.currentPair) {
+      this.currentPair = this.keyringService.createFromMnemonic(decryptedSeed, this.currentWallet.name);
+    }
 
-    // Save transaction to database
-    await db.transactions.add({
-      hash,
+    // Save transaction to database first
+    const txId = await db.transactions.add({
+      hash: '', // Will be updated when we get the hash
       from: this.currentWallet.address,
       to,
       amount,
@@ -232,6 +232,43 @@ export class WalletManager {
       timestamp: new Date(),
       type: 'send'
     });
+
+    // Send transaction and update status
+    const hash = await this.client.transfer(
+      this.currentPair,
+      to,
+      amount,
+      async (status) => {
+        console.log('Transaction status:', status.status.toString());
+
+        if (status.status.isInBlock) {
+          // Update transaction hash when included in block
+          await db.transactions.update(txId, {
+            hash: status.status.asInBlock.toString(),
+            status: 'pending'
+          });
+        }
+
+        if (status.status.isFinalized) {
+          // Mark as success when finalized
+          await db.transactions.update(txId, {
+            hash: status.status.asFinalized.toString(),
+            status: 'success',
+            blockNumber: status.status.asFinalized.toString()
+          });
+        }
+
+        if (status.isError) {
+          // Mark as failed if error
+          await db.transactions.update(txId, {
+            status: 'failed'
+          });
+        }
+      }
+    );
+
+    // Update with final hash
+    await db.transactions.update(txId, { hash });
 
     return hash;
   }

@@ -160,7 +160,11 @@ export class SubstrateClient {
   ): Promise<string> {
     const api = this.getApi();
 
-    const transfer = api.tx.balances.transferKeepAlive(to, amount);
+    // Convert amount to smallest unit (18 decimals for tGLIN)
+    const decimals = 18;
+    const amountInSmallestUnit = BigInt(Math.floor(parseFloat(amount) * (10 ** decimals))).toString();
+
+    const transfer = api.tx.balances.transferKeepAlive(to, amountInSmallestUnit);
 
     return new Promise((resolve, reject) => {
       transfer.signAndSend(from, (result) => {
@@ -194,7 +198,12 @@ export class SubstrateClient {
     amount: string
   ): Promise<string> {
     const api = this.getApi();
-    const transfer = api.tx.balances.transferKeepAlive(to, amount);
+
+    // Convert amount to smallest unit (18 decimals for tGLIN)
+    const decimals = 18;
+    const amountInSmallestUnit = BigInt(Math.floor(parseFloat(amount) * (10 ** decimals))).toString();
+
+    const transfer = api.tx.balances.transferKeepAlive(to, amountInSmallestUnit);
     const info = await transfer.paymentInfo(from);
     return info.partialFee.toString();
   }

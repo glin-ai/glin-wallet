@@ -39,20 +39,32 @@ cd glin-wallet
 # Install dependencies
 npm install
 
+# Copy environment configuration
+cp .env.example .env.local
+# Edit .env.local with your settings
+
 # Run development server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to use the wallet.
 
+### Testing with Funded Accounts
+
+For testing, you can import validator accounts from your testnet.
+**NEVER share seed phrases in public repositories!**
+
+Contact the testnet administrator for test account access.
+
 ### Environment Variables
 
 Create a `.env.local` file:
 
 ```env
-NEXT_PUBLIC_RPC_ENDPOINT=wss://rpc.glin-testnet.railway.app
-NEXT_PUBLIC_BACKEND_URL=https://api.glin-testnet.railway.app
-NEXT_PUBLIC_CHAIN_NAME=GLIN Testnet
+NEXT_PUBLIC_RPC_ENDPOINT=wss://glin-rpc-production.up.railway.app
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+NEXT_PUBLIC_FAUCET_URL=http://localhost:8080/api/v1/faucet
+NEXT_PUBLIC_CHAIN_NAME=GLIN Incentivized Testnet
 NEXT_PUBLIC_TOKEN_SYMBOL=tGLIN
 NEXT_PUBLIC_TOKEN_DECIMALS=18
 ```

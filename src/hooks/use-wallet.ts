@@ -28,7 +28,7 @@ export const useWallet = () => {
       if (!isConnected && !isInitializing) {
         setIsInitializing(true);
         try {
-          const rpcEndpoint = process.env.NEXT_PUBLIC_RPC_ENDPOINT || 'wss://rpc.glin-testnet.railway.app';
+          const rpcEndpoint = process.env.NEXT_PUBLIC_RPC_ENDPOINT || 'wss://glin-rpc-production.up.railway.app';
           await initWallet(rpcEndpoint);
           setError(null);
         } catch (err) {
@@ -85,8 +85,35 @@ export const useWallet = () => {
 // Helper functions
 function formatBalance(balance: string): string {
   const decimals = 18;
-  const value = BigInt(balance) / BigInt(10 ** decimals);
-  return value.toString();
+
+  // Convert to BigInt and divide by decimals
+  const rawValue = BigInt(balance || '0');
+  const divisor = BigInt(10 ** decimals);
+  const wholePart = rawValue / divisor;
+  const fractionalPart = rawValue % divisor;
+
+  // Format whole part with thousand separators
+  const wholeStr = wholePart.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  // Get first 4 decimal places
+  const fractionalStr = fractionalPart.toString().padStart(decimals, '0').slice(0, 4);
+
+  // Determine the unit based on value
+  let unit = 'tGLIN';
+  if (wholePart >= BigInt(1000000)) {
+    unit = 'MtGLIN'; // Million tGLIN
+    const millions = Number(wholePart) / 1000000;
+    return `${millions.toFixed(4)} ${unit}`;
+  }
+
+  // Remove trailing zeros from fractional part
+  const trimmedFractional = fractionalStr.replace(/0+$/, '');
+
+  if (trimmedFractional) {
+    return `${wholeStr}.${trimmedFractional} ${unit}`;
+  }
+
+  return `${wholeStr} ${unit}`;
 }
 
 function formatAddress(address: string): string {

@@ -14,7 +14,7 @@ import { MnemonicService } from '@/lib/crypto/mnemonic';
 
 export default function CreateWalletPage() {
   const router = useRouter();
-  const { createWallet } = useWallet();
+  const { createWallet, isConnected, isInitializing, error: walletError } = useWallet();
   const [step, setStep] = useState(1);
   const [walletName, setWalletName] = useState('');
   const [password, setPassword] = useState('');
@@ -67,6 +67,42 @@ export default function CreateWalletPage() {
       setIsCreating(false);
     }
   };
+
+  // Show loading state while wallet is initializing
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-black/50 backdrop-blur-xl border-white/20 p-8">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+            <p className="text-white">Connecting to network...</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show error if wallet failed to initialize
+  if (!isConnected && walletError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-black/50 backdrop-blur-xl border-white/20 p-8">
+          <Alert className="bg-red-500/10 border-red-500/20">
+            <AlertCircle className="h-4 w-4 text-red-500" />
+            <AlertDescription className="text-red-400">
+              Failed to connect to network. Please check your connection and try again.
+            </AlertDescription>
+          </Alert>
+          <Button
+            onClick={() => window.location.reload()}
+            className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
+          >
+            Retry Connection
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
