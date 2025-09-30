@@ -3,28 +3,25 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Wallet, Send, Download, Trophy, Activity, Settings, LogOut,
-  Copy, Check, ExternalLink, TrendingUp, Sparkles, Zap, Globe
+  Send, Download, Trophy, Activity, Settings, LogOut,
+  Copy, Check, TrendingUp, Sparkles, Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useWallet } from '@/hooks/use-wallet';
 
 export default function DashboardPage() {
   const router = useRouter();
   const {
     wallet,
-    balance,
     isLocked,
     transactions,
     formattedBalance,
     shortAddress,
-    lockWallet,
-    refreshBalance
+    lockWallet
   } = useWallet();
 
   const [copied, setCopied] = useState(false);
@@ -307,7 +304,7 @@ function StatsCard({
   );
 }
 
-function TransactionItem({ transaction }: { transaction: any }) {
+function TransactionItem({ transaction }: { transaction: { type: string; timestamp: Date; amount: string; status: string } }) {
   const isReceived = transaction.type === 'receive';
 
   return (

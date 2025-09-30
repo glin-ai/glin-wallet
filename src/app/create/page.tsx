@@ -60,10 +60,10 @@ export default function CreateWalletPage() {
 
     setIsCreating(true);
     try {
-      await createWallet(walletName, password, mnemonic);
+      await createWallet(walletName, password);
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Failed to create wallet');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create wallet');
       setIsCreating(false);
     }
   };

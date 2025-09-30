@@ -79,10 +79,10 @@ export class WalletManager {
 
     // Save new wallet
     const id = await db.wallets.add(wallet);
-    wallet.id = id;
+    wallet.id = typeof id === 'number' ? id : Number(id);
 
     // Create default account
-    await this.createAccount(id, 0, 'Main Account');
+    await this.createAccount(wallet.id, 0, 'Main Account');
 
     // Set as current
     this.currentWallet = wallet;
@@ -174,7 +174,7 @@ export class WalletManager {
     };
 
     const id = await db.accounts.add(account);
-    account.id = id;
+    account.id = typeof id === 'number' ? id : Number(id);
 
     return account;
   }

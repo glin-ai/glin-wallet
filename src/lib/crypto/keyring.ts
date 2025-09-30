@@ -1,6 +1,7 @@
 import { Keyring } from '@polkadot/keyring';
 import { KeyringPair } from '@polkadot/keyring/types';
-import { cryptoWaitReady } from '@polkadot/util-crypto';
+import { cryptoWaitReady, signatureVerify } from '@polkadot/util-crypto';
+import { hexToU8a } from '@polkadot/util';
 
 export interface WalletAccount {
   address: string;
@@ -79,9 +80,9 @@ export class KeyringService {
    */
   lockAccount(pair: KeyringPair, password: string): string {
     if (!pair.isLocked) {
-      pair.lock(password);
+      pair.lock();
     }
-    return pair.toJson(password).toString();
+    return JSON.stringify(pair.toJson(password));
   }
 
   /**
@@ -105,10 +106,15 @@ export class KeyringService {
    */
   verifySignature(
     message: string | Uint8Array,
-    signature: Uint8Array,
+    signature: Uint8Array | string,
     address: string
   ): boolean {
-    const keyring = this.getKeyring();
-    return keyring.verify(message, signature, address);
+    try {
+      const signatureU8a = typeof signature === 'string' ? hexToU8a(signature) : signature;
+      const result = signatureVerify(message, signatureU8a, address);
+      return result.isValid;
+    } catch {
+      return false;
+    }
   }
 }

@@ -30,8 +30,7 @@ export default function SettingsPage() {
     wallet,
     isLocked,
     exportSeedPhrase,
-    deleteWallet,
-    lockWallet
+    deleteWallet
   } = useWallet();
 
   const [showSeedPhrase, setShowSeedPhrase] = useState(false);
@@ -75,8 +74,8 @@ export default function SettingsPage() {
       } else {
         setError('Invalid password');
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to export seed phrase');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to export seed phrase');
     }
   };
 
@@ -106,8 +105,8 @@ export default function SettingsPage() {
       } else {
         setError('Invalid password');
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete wallet');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete wallet');
     }
   };
 
@@ -453,7 +452,7 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="confirm-name" className="text-white">
-                  Type "{wallet.name}" to confirm
+                  Type &quot;{wallet.name}&quot; to confirm
                 </Label>
                 <Input
                   id="confirm-name"

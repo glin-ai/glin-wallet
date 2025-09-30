@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWallet } from '@/hooks/use-wallet';
 
@@ -16,7 +15,6 @@ export default function SendPage() {
   const router = useRouter();
   const {
     wallet,
-    balance,
     formattedBalance,
     sendTransaction,
     isLocked
@@ -25,7 +23,7 @@ export default function SendPage() {
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [password, setPassword] = useState('');
-  const [estimatedFee, setEstimatedFee] = useState('0.001');
+  const [estimatedFee] = useState('0.001');
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -101,8 +99,8 @@ export default function SendPage() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 3000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to send transaction');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send transaction');
       setPassword(''); // Clear password on error
     } finally {
       setIsSending(false);

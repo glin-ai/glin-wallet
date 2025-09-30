@@ -1,6 +1,5 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { KeyringPair } from '@polkadot/keyring/types';
-import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import type { ISubmittableResult } from '@polkadot/types/types';
 
 export interface ChainInfo {
@@ -89,11 +88,15 @@ export class SubstrateClient {
     const api = this.getApi();
     const properties = api.registry.getChainProperties();
 
+    const tokenSymbolArray = properties?.tokenSymbol.toJSON() as string[] | undefined;
+    const tokenDecimalsArray = properties?.tokenDecimals.toJSON() as number[] | undefined;
+    const ss58FormatValue = properties?.ss58Format.toJSON() as number | undefined;
+
     return {
       name: api.runtimeChain.toString(),
-      tokenSymbol: properties?.tokenSymbol.toJSON()?.[0] as string || 'GLIN',
-      tokenDecimals: properties?.tokenDecimals.toJSON()?.[0] as number || 18,
-      ss58Format: properties?.ss58Format.toJSON() as number || 42
+      tokenSymbol: tokenSymbolArray?.[0] || 'GLIN',
+      tokenDecimals: tokenDecimalsArray?.[0] || 18,
+      ss58Format: ss58FormatValue || 42
     };
   }
 
@@ -102,13 +105,23 @@ export class SubstrateClient {
    */
   async getBalance(address: string): Promise<Balance> {
     const api = this.getApi();
-    const { data } = await api.query.system.account(address);
+    const account = await api.query.system.account(address);
+
+    // Type assertion for Substrate account structure
+    const accountInfo = account as unknown as {
+      data: {
+        free: { toString(): string };
+        reserved: { toString(): string };
+        frozen: { toString(): string };
+        flags: { toString(): string };
+      }
+    };
 
     return {
-      free: data.free.toString(),
-      reserved: data.reserved.toString(),
-      frozen: data.frozen.toString(),
-      flags: data.flags.toString()
+      free: accountInfo.data.free.toString(),
+      reserved: accountInfo.data.reserved.toString(),
+      frozen: accountInfo.data.frozen.toString(),
+      flags: accountInfo.data.flags.toString()
     };
   }
 
@@ -131,15 +144,23 @@ export class SubstrateClient {
     const api = this.getApi();
     let unsubscribe: (() => void) | null = null;
 
-    api.query.system.account(address, ({ data }) => {
+    api.query.system.account(address, (account: unknown) => {
+      const accountInfo = account as {
+        data: {
+          free: { toString(): string };
+          reserved: { toString(): string };
+          frozen: { toString(): string };
+          flags: { toString(): string };
+        }
+      };
       callback({
-        free: data.free.toString(),
-        reserved: data.reserved.toString(),
-        frozen: data.frozen.toString(),
-        flags: data.flags.toString()
+        free: accountInfo.data.free.toString(),
+        reserved: accountInfo.data.reserved.toString(),
+        frozen: accountInfo.data.frozen.toString(),
+        flags: accountInfo.data.flags.toString()
       });
-    }).then(unsub => {
-      unsubscribe = unsub;
+    }).then((unsub: unknown) => {
+      unsubscribe = unsub as () => void;
     });
 
     return () => {
@@ -211,7 +232,7 @@ export class SubstrateClient {
   /**
    * Get transaction details
    */
-  async getTransaction(hash: string): Promise<any> {
+  async getTransaction(hash: string): Promise<{ hash: string; method: string; section: string; args: string[] } | null> {
     const api = this.getApi();
     const blockHash = await api.rpc.chain.getBlockHash();
     const signedBlock = await api.rpc.chain.getBlock(blockHash);

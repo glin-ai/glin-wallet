@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Droplets, Twitter, Github, Clock, AlertCircle, CheckCircle, Sparkles, Zap, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,18 +32,7 @@ export default function FaucetPage() {
     isEligible: true
   });
 
-  useEffect(() => {
-    if (isLocked || !wallet) {
-      router.push('/');
-    }
-  }, [isLocked, wallet, router]);
-
-  useEffect(() => {
-    // Check faucet status
-    checkFaucetStatus();
-  }, [wallet?.address]);
-
-  const checkFaucetStatus = async () => {
+  const checkFaucetStatus = useCallback(async () => {
     if (!wallet?.address) return;
 
     // Simulate API call to check faucet status
@@ -64,7 +53,18 @@ export default function FaucetPage() {
         });
       }
     }
-  };
+  }, [wallet]);
+
+  useEffect(() => {
+    if (isLocked || !wallet) {
+      router.push('/');
+    }
+  }, [isLocked, wallet, router]);
+
+  useEffect(() => {
+    // Check faucet status
+    checkFaucetStatus();
+  }, [wallet?.address, checkFaucetStatus]);
 
   const handleClaim = async () => {
     if (!wallet?.address || !faucetStatus.isEligible) return;
@@ -100,8 +100,8 @@ export default function FaucetPage() {
         refreshBalance();
         checkFaucetStatus();
       }, 3000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to claim from faucet. Please try again later.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to claim from faucet. Please try again later.');
     } finally {
       setIsClaiming(false);
     }

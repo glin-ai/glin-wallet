@@ -35,7 +35,7 @@ export interface Transaction {
   blockNumber?: number;
   timestamp: Date;
   type: 'send' | 'receive' | 'faucet';
-  metadata?: any;
+  metadata?: unknown;
 }
 
 export interface Contact {
@@ -52,13 +52,13 @@ export interface Activity {
   type: string;
   points: number;
   timestamp: Date;
-  metadata?: any;
+  metadata?: unknown;
 }
 
 export interface Settings {
   id?: number;
   key: string;
-  value: any;
+  value: unknown;
   updatedAt: Date;
 }
 
@@ -81,9 +81,10 @@ class GlinWalletDB extends Dexie {
       contacts: '++id, address',
       activities: '++id, type, timestamp',
       settings: '++id, key'
-    }).upgrade(trans => {
+    }).upgrade(async trans => {
       // Migration: ensure isActive is properly set
-      return trans.wallets.toCollection().modify(wallet => {
+      const wallets = trans.table('wallets');
+      await wallets.toCollection().modify(wallet => {
         if (wallet.isActive === undefined) {
           wallet.isActive = false;
         }
@@ -161,7 +162,7 @@ class GlinWalletDB extends Dexie {
   /**
    * Get setting
    */
-  async getSetting(key: string): Promise<any> {
+  async getSetting(key: string): Promise<unknown> {
     const setting = await this.settings.where('key').equals(key).first();
     return setting?.value;
   }
@@ -169,7 +170,7 @@ class GlinWalletDB extends Dexie {
   /**
    * Set setting
    */
-  async setSetting(key: string, value: any): Promise<void> {
+  async setSetting(key: string, value: unknown): Promise<void> {
     const existing = await this.settings.where('key').equals(key).first();
     if (existing) {
       await this.settings.update(existing.id!, { value, updatedAt: new Date() });

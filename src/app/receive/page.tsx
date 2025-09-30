@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { ArrowLeft, Copy, Check, Download, QrCode, Sparkles, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -108,7 +109,7 @@ export default function ReceivePage() {
             <div className="flex justify-center">
               <div className="bg-white p-4 rounded-xl">
                 {qrDataUrl ? (
-                  <img src={qrDataUrl} alt="Wallet QR Code" className="w-64 h-64" />
+                  <Image src={qrDataUrl} alt="Wallet QR Code" width={256} height={256} />
                 ) : (
                   <div className="w-64 h-64 bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
                     <QrCode className="h-12 w-12 text-gray-400" />

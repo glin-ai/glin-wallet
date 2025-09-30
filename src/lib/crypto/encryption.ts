@@ -108,7 +108,7 @@ export class EncryptionService {
   /**
    * Create encrypted vault data
    */
-  static createVault(data: any, password: string): {
+  static createVault(data: unknown, password: string): {
     vault: string;
     checksum: string;
   } {
@@ -129,7 +129,7 @@ export class EncryptionService {
   /**
    * Open encrypted vault
    */
-  static openVault(vault: string, password: string): any | null {
+  static openVault(vault: string, password: string): unknown | null {
     try {
       const vaultData = JSON.parse(vault);
       const decrypted = this.decrypt(

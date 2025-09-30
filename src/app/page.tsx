@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Wallet, Zap, Trophy, ArrowRight, Sparkles } from 'lucide-react';
+import { Shield, Zap, Trophy, ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useWallet } from '@/hooks/use-wallet';

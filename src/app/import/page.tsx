@@ -74,8 +74,8 @@ export default function ImportWalletPage() {
     try {
       await importWallet(walletName, finalMnemonic, password);
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Failed to import wallet');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to import wallet');
       setIsImporting(false);
     }
   };
@@ -239,7 +239,7 @@ export default function ImportWalletPage() {
           <Alert className="bg-yellow-500/10 border-yellow-500/20">
             <AlertCircle className="h-4 w-4 text-yellow-500" />
             <AlertDescription className="text-yellow-300">
-              Make sure you're importing the correct wallet. This action will create a new wallet instance
+              Make sure you&apos;re importing the correct wallet. This action will create a new wallet instance
               with the provided seed phrase.
             </AlertDescription>
           </Alert>
