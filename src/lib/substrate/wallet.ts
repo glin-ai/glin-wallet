@@ -4,6 +4,7 @@ import { KeyringService } from '../crypto/keyring';
 import { EncryptionService } from '../crypto/encryption';
 import { db, Wallet, Account, Transaction } from '../storage/db';
 import { SubstrateClient } from './client';
+import { BackendAPIClient } from '../backend/api';
 
 export interface WalletService {
   currentWallet: Wallet | null;
@@ -14,12 +15,16 @@ export interface WalletService {
 export class WalletManager {
   private keyringService: KeyringService;
   private client: SubstrateClient;
+  private backendClient: BackendAPIClient;
   private currentWallet: Wallet | null = null;
   private currentPair: KeyringPair | null = null;
 
-  constructor(rpcEndpoint: string) {
+  constructor(rpcEndpoint: string, backendUrl?: string) {
     this.keyringService = new KeyringService();
     this.client = new SubstrateClient(rpcEndpoint);
+    this.backendClient = new BackendAPIClient(
+      backendUrl || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
+    );
   }
 
   /**
@@ -274,7 +279,7 @@ export class WalletManager {
   }
 
   /**
-   * Get transaction history
+   * Get transaction history from backend
    */
   async getTransactionHistory(address?: string): Promise<Transaction[]> {
     const addr = address || this.currentWallet?.address;
@@ -282,7 +287,31 @@ export class WalletManager {
       throw new Error('No wallet selected');
     }
 
-    return await db.getRecentTransactions(addr, 50);
+    try {
+      // Fetch from backend API
+      const response = await this.backendClient.getTransactions(addr, { limit: 50 });
+
+      // Transform backend response to Transaction interface
+      return response.transactions.map(tx => ({
+        hash: tx.hash,
+        from: tx.fromAddress,
+        to: tx.toAddress,
+        amount: tx.amount,
+        fee: tx.fee,
+        status: tx.status,
+        blockNumber: tx.blockNumber,
+        blockHash: tx.blockHash,
+        timestamp: new Date(tx.timestamp),
+        type: tx.fromAddress.toLowerCase() === addr.toLowerCase() ? 'send' : 'receive',
+        method: tx.method,
+        extrinsicIndex: tx.extrinsicIndex,
+        errorMessage: tx.errorMessage
+      }));
+    } catch (error) {
+      console.error('Failed to fetch transactions from backend:', error);
+      // Fallback to local transactions
+      return await db.getRecentTransactions(addr, 50);
+    }
   }
 
   /**

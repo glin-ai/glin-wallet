@@ -39,7 +39,8 @@ export const useWalletStore = create<WalletState>()(
       // Initialize wallet manager
       initWallet: async (rpcEndpoint: string) => {
         try {
-          const manager = new WalletManager(rpcEndpoint);
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+          const manager = new WalletManager(rpcEndpoint, backendUrl);
           await manager.init();
 
           const currentWallet = manager.getCurrentWallet();

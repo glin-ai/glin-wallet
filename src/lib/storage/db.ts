@@ -30,11 +30,15 @@ export interface Transaction {
   from: string;
   to: string;
   amount: string;
-  fee: string;
+  fee: string | null;
   status: 'pending' | 'success' | 'failed';
   blockNumber?: number;
+  blockHash?: string;
   timestamp: Date;
   type: 'send' | 'receive' | 'faucet';
+  method?: string;
+  extrinsicIndex?: number;
+  errorMessage?: string | null;
   metadata?: unknown;
 }
 
