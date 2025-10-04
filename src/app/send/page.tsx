@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Send, AlertCircle, Loader2, User, Zap, Lock, Eye, EyeOff } from 'lucide-react';
+import { parseGLIN } from '@glin-ai/sdk';
 import { GlinCoinIcon } from '@/components/icons/glin-coin-icon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ export default function SendPage() {
   const router = useRouter();
   const {
     wallet,
+    balance,
     formattedBalance,
     sendTransaction,
     isLocked
@@ -73,10 +75,12 @@ export default function SendPage() {
       return;
     }
 
-    const balanceNum = parseFloat(formattedBalance);
-    const feeNum = parseFloat(estimatedFee);
+    // Convert to planck (bigint) for accurate comparison
+    const amountPlanck = parseGLIN(amount);
+    const feePlanck = parseGLIN(estimatedFee);
+    const balancePlanck = BigInt(balance || '0');
 
-    if (amountNum + feeNum > balanceNum) {
+    if (amountPlanck + feePlanck > balancePlanck) {
       setError('Insufficient balance (including fees)');
       return;
     }
@@ -91,7 +95,8 @@ export default function SendPage() {
     setSuccess(false);
 
     try {
-      const txHash = await sendTransaction(recipient, amount, password);
+      // Use already converted amountPlanck from validation
+      const txHash = await sendTransaction(recipient, amountPlanck, password);
       setTxHash(txHash);
       setSuccess(true);
       setPassword(''); // Clear password after success

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { WalletManager } from '@/lib/substrate/wallet';
 import { Wallet, Transaction } from '@/lib/storage/db';
+import { NetworkId } from '@/lib/network/types';
 
 interface WalletState {
   // State
@@ -11,6 +12,7 @@ interface WalletState {
   isConnected: boolean;
   isLocked: boolean;
   transactions: Transaction[];
+  currentNetwork: NetworkId;
 
   // Actions
   initWallet: (rpcEndpoint: string) => Promise<void>;
@@ -18,11 +20,13 @@ interface WalletState {
   importWallet: (name: string, mnemonic: string, password: string) => Promise<Wallet>;
   unlockWallet: (walletId: number, password: string) => Promise<boolean>;
   lockWallet: () => void;
-  sendTransaction: (to: string, amount: string, password: string) => Promise<string>;
+  sendTransaction: (to: string, amount: bigint, password: string) => Promise<string>;
   refreshBalance: () => Promise<void>;
   refreshTransactions: () => Promise<void>;
   deleteWallet: (walletId: number, password: string) => Promise<boolean>;
   exportSeedPhrase: (password: string) => string | null;
+  changeNetwork: (networkId: NetworkId, customRpcUrl?: string) => Promise<void>;
+  setCurrentNetwork: (networkId: NetworkId) => void;
 }
 
 export const useWalletStore = create<WalletState>()(
@@ -35,6 +39,7 @@ export const useWalletStore = create<WalletState>()(
       isConnected: false,
       isLocked: true,
       transactions: [],
+      currentNetwork: 'localhost',
 
       // Initialize wallet manager
       initWallet: async (rpcEndpoint: string) => {
@@ -134,7 +139,7 @@ export const useWalletStore = create<WalletState>()(
       },
 
       // Send transaction
-      sendTransaction: async (to: string, amount: string, password: string) => {
+      sendTransaction: async (to: string, amount: bigint, password: string) => {
         const manager = get().walletManager;
         if (!manager) throw new Error('Wallet not initialized');
 
@@ -200,13 +205,67 @@ export const useWalletStore = create<WalletState>()(
         if (!manager) throw new Error('Wallet not initialized');
 
         return manager.exportSeedPhrase(password);
+      },
+
+      // Change network
+      changeNetwork: async (networkId: NetworkId, customRpcUrl?: string) => {
+        const { getNetworkById } = await import('@/lib/network/types');
+        const { setCurrentNetwork: saveNetwork } = await import('@/lib/network/storage');
+
+        // Validate network
+        const network = getNetworkById(networkId, customRpcUrl);
+        if (!network) {
+          throw new Error('Invalid network configuration');
+        }
+
+        console.log('[Wallet Store] Changing network to:', network.name, network.rpcUrl);
+
+        // Save network preference
+        saveNetwork(networkId, customRpcUrl);
+
+        // Disconnect existing wallet manager
+        const manager = get().walletManager;
+        if (manager) {
+          try {
+            await manager.disconnect();
+          } catch (error) {
+            console.error('[Wallet Store] Error disconnecting old manager:', error);
+          }
+        }
+
+        // Reinitialize with new RPC URL
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+        const newManager = new WalletManager(network.rpcUrl, backendUrl);
+        await newManager.init();
+
+        const currentWallet = newManager.getCurrentWallet();
+
+        set({
+          walletManager: newManager,
+          currentWallet,
+          isConnected: true,
+          isLocked: currentWallet === null,
+          currentNetwork: networkId
+        });
+
+        // Refresh data if wallet is unlocked
+        if (currentWallet) {
+          await get().refreshBalance();
+          await get().refreshTransactions();
+        }
+      },
+
+      // Set current network (internal use)
+      setCurrentNetwork: (networkId: NetworkId) => {
+        set({ currentNetwork: networkId });
       }
     }),
     {
       name: 'glin-wallet-store',
       partialize: (state) => ({
         // Only persist non-sensitive data
-        isConnected: state.isConnected
+        isConnected: state.isConnected,
+        currentNetwork: state.currentNetwork
       })
     }
   )

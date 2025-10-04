@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Settings, Key, Shield, Download, Trash2, AlertCircle,
-  Eye, EyeOff, Copy, Check, Lock, User, Globe, Moon, Sun
+  Eye, EyeOff, Copy, Check, Lock, User, Moon, Sun
 } from 'lucide-react';
 import { GlinCoinIcon } from '@/components/icons/glin-coin-icon';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useWallet } from '@/hooks/use-wallet';
+import { NetworkSwitcher } from '@/components/network-switcher';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -31,7 +32,9 @@ export default function SettingsPage() {
     wallet,
     isLocked,
     exportSeedPhrase,
-    deleteWallet
+    deleteWallet,
+    currentNetwork,
+    changeNetwork
   } = useWallet();
 
   const [showSeedPhrase, setShowSeedPhrase] = useState(false);
@@ -242,16 +245,11 @@ export default function SettingsPage() {
                   <Separator className="bg-white/10" />
 
                   <div>
-                    <Label className="text-white">Network</Label>
-                    <div className="mt-3 p-3 bg-white/5 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Globe className="h-4 w-4 text-green-400" />
-                          <span className="text-gray-300">GLIN Testnet</span>
-                        </div>
-                        <span className="text-green-400 text-sm">Connected</span>
-                      </div>
-                    </div>
+                    <Label className="text-white mb-3 block">Network</Label>
+                    <NetworkSwitcher
+                      currentNetwork={currentNetwork}
+                      onNetworkChange={changeNetwork}
+                    />
                   </div>
                 </div>
               </TabsContent>

@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@polkadot/api": "^10.11.2",
+    "@glin-ai/sdk": "^0.4.1",
     "@polkadot/keyring": "^12.6.2",
     "@polkadot/util": "^12.6.2",
     "@polkadot/util-crypto": "^12.6.2",

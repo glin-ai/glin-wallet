@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useWallet } from '@/hooks/use-wallet';
+import { NetworkIndicator } from '@/components/network-indicator';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -22,7 +23,8 @@ export default function DashboardPage() {
     transactions,
     formattedBalance,
     shortAddress,
-    lockWallet
+    lockWallet,
+    currentNetwork
   } = useWallet();
 
   const [copied, setCopied] = useState(false);
@@ -75,10 +77,10 @@ export default function DashboardPage() {
                 <GlinCoinIcon size={32} />
                 <span className="text-2xl font-bold text-white">GLIN</span>
               </div>
-              <Badge variant="outline" className="text-green-400 border-green-400">
-                <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                Testnet
-              </Badge>
+              <NetworkIndicator
+                networkId={currentNetwork}
+                onClick={() => router.push('/settings')}
+              />
             </div>
 
             <div className="flex items-center space-x-4">

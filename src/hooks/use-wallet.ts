@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useWalletStore } from '@/store/wallet-store';
+import { getCurrentRpcUrl, initializeNetworkStorage, getCurrentNetwork } from '@/lib/network/storage';
 
 export const useWallet = () => {
   const {
@@ -8,6 +9,7 @@ export const useWallet = () => {
     isConnected,
     isLocked,
     transactions,
+    currentNetwork,
     initWallet,
     createWallet,
     importWallet,
@@ -17,7 +19,9 @@ export const useWallet = () => {
     refreshBalance,
     refreshTransactions,
     deleteWallet,
-    exportSeedPhrase
+    exportSeedPhrase,
+    changeNetwork,
+    setCurrentNetwork: setStoreNetwork
   } = useWalletStore();
 
   const [isInitializing, setIsInitializing] = useState(false);
@@ -28,7 +32,17 @@ export const useWallet = () => {
       if (!isConnected && !isInitializing) {
         setIsInitializing(true);
         try {
-          const rpcEndpoint = process.env.NEXT_PUBLIC_RPC_ENDPOINT || 'wss://glin-rpc-production.up.railway.app';
+          // Initialize network storage
+          initializeNetworkStorage();
+
+          // Get RPC endpoint from storage
+          const rpcEndpoint = getCurrentRpcUrl();
+          console.log('[useWallet] Initializing with RPC:', rpcEndpoint);
+
+          // Get and sync network ID with store
+          const { networkId } = getCurrentNetwork();
+          setStoreNetwork(networkId);
+
           await initWallet(rpcEndpoint);
           setError(null);
         } catch (err) {
@@ -41,7 +55,7 @@ export const useWallet = () => {
     };
 
     init();
-  }, [isConnected, isInitializing, initWallet]);
+  }, [isConnected, isInitializing, initWallet, setStoreNetwork]);
 
   // Auto-refresh balance every 10 seconds when unlocked
   useEffect(() => {
@@ -63,6 +77,7 @@ export const useWallet = () => {
     transactions,
     isInitializing,
     error,
+    currentNetwork,
 
     // Actions
     createWallet,
@@ -74,6 +89,7 @@ export const useWallet = () => {
     refreshTransactions,
     deleteWallet,
     exportSeedPhrase,
+    changeNetwork,
 
     // Computed
     hasWallet: currentWallet !== null,

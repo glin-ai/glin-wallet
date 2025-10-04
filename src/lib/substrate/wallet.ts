@@ -1,27 +1,28 @@
 import { KeyringPair } from '@polkadot/keyring/types';
+import { GlinClient, GlinTransfer } from '@glin-ai/sdk';
 import { MnemonicService } from '../crypto/mnemonic';
 import { KeyringService } from '../crypto/keyring';
 import { EncryptionService } from '../crypto/encryption';
 import { db, Wallet, Account, Transaction } from '../storage/db';
-import { SubstrateClient } from './client';
 import { BackendAPIClient } from '../backend/api';
 
 export interface WalletService {
   currentWallet: Wallet | null;
   currentAccount: KeyringPair | null;
-  client: SubstrateClient;
+  client: GlinClient;
 }
 
 export class WalletManager {
   private keyringService: KeyringService;
-  private client: SubstrateClient;
+  private client: GlinClient;
+  private transfer: GlinTransfer | null = null;
   private backendClient: BackendAPIClient;
   private currentWallet: Wallet | null = null;
   private currentPair: KeyringPair | null = null;
 
   constructor(rpcEndpoint: string, backendUrl?: string) {
     this.keyringService = new KeyringService();
-    this.client = new SubstrateClient(rpcEndpoint);
+    this.client = new GlinClient(rpcEndpoint);
     this.backendClient = new BackendAPIClient(
       backendUrl || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
     );
@@ -33,6 +34,12 @@ export class WalletManager {
   async init(): Promise<void> {
     await this.keyringService.init();
     await this.client.connect();
+
+    // Initialize transfer module after connection
+    const api = this.client.getApi();
+    if (api) {
+      this.transfer = new GlinTransfer(api);
+    }
 
     // Load active wallet if exists
     const activeWallet = await db.getActiveWallet();
@@ -202,7 +209,7 @@ export class WalletManager {
    */
   async sendTransaction(
     to: string,
-    amount: string,
+    amount: bigint,
     password: string
   ): Promise<string> {
     if (!this.currentWallet) {
@@ -226,20 +233,24 @@ export class WalletManager {
       this.currentPair = this.keyringService.createFromMnemonic(decryptedSeed, this.currentWallet.name);
     }
 
-    // Save transaction to database first
+    // Save transaction to database first (store amount as string)
     const txId = await db.transactions.add({
       hash: '', // Will be updated when we get the hash
       from: this.currentWallet.address,
       to,
-      amount,
+      amount: amount.toString(),
       fee: '0', // Will be updated with actual fee
       status: 'pending',
       timestamp: new Date(),
       type: 'send'
     });
 
-    // Send transaction and update status
-    const hash = await this.client.transfer(
+    // Send transaction and update status (amount is already bigint from caller)
+    if (!this.transfer) {
+      throw new Error('Transfer module not initialized');
+    }
+
+    const hash = await this.transfer.transfer(
       this.currentPair,
       to,
       amount,
@@ -317,7 +328,7 @@ export class WalletManager {
   /**
    * Estimate transaction fee
    */
-  async estimateFee(to: string, amount: string): Promise<string> {
+  async estimateFee(to: string, amount: bigint): Promise<string> {
     if (!this.currentWallet) {
       throw new Error('No wallet selected');
     }
@@ -398,7 +409,17 @@ export class WalletManager {
   /**
    * Get substrate client
    */
-  getClient(): SubstrateClient {
+  getClient(): GlinClient {
     return this.client;
+  }
+
+  /**
+   * Disconnect from network and clean up
+   */
+  async disconnect(): Promise<void> {
+    await this.client.disconnect();
+    this.transfer = null;
+    this.currentWallet = null;
+    this.currentPair = null;
   }
 }
